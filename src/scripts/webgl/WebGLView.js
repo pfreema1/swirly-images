@@ -4,8 +4,8 @@ import glslify from 'glslify';
 import Tweakpane from 'tweakpane';
 import OrbitControls from 'three-orbitcontrols';
 import TweenMax from 'TweenMax';
-import baseDiffuseFrag from '../../shaders/basicDiffuse.frag';
-import basicDiffuseVert from '../../shaders/basicDiffuse.vert';
+import planeFrag from '../../shaders/plane.frag';
+import planeVert from '../../shaders/plane.vert';
 import MouseCanvas from '../MouseCanvas';
 import TextCanvas from '../TextCanvas';
 import RenderTri from '../RenderTri';
@@ -81,22 +81,22 @@ export default class WebGLView {
 
     this.composer.addPass(new RenderPass(this.scene, this.camera));
 
-    const bloomPass = new BloomPass(
-      1, // strength
-      25, // kernel size
-      4, // sigma ?
-      256 // blur render target resolution
-    );
-    this.composer.addPass(bloomPass);
+    // const bloomPass = new BloomPass(
+    //   1, // strength
+    //   25, // kernel size
+    //   4, // sigma ?
+    //   256 // blur render target resolution
+    // );
+    // this.composer.addPass(bloomPass);
 
-    const filmPass = new FilmPass(
-      0.35, // noise intensity
-      0.025, // scanline intensity
-      648, // scanline count
-      false // grayscale
-    );
-    filmPass.renderToScreen = true;
-    this.composer.addPass(filmPass);
+    // const filmPass = new FilmPass(
+    //   0.35, // noise intensity
+    //   0.025, // scanline intensity
+    //   648, // scanline count
+    //   false // grayscale
+    // );
+    // filmPass.renderToScreen = true;
+    // this.composer.addPass(filmPass);
   }
 
   initTweakPane() {
@@ -152,23 +152,20 @@ export default class WebGLView {
         this.testMesh.add(new THREE.AxesHelper());
 
         this.testMeshMaterial = new THREE.ShaderMaterial({
-          fragmentShader: glslify(baseDiffuseFrag),
-          vertexShader: glslify(basicDiffuseVert),
+          fragmentShader: glslify(planeFrag),
+          vertexShader: glslify(planeVert),
           uniforms: {
             u_time: {
               value: 0.0
-            },
-            u_lightColor: {
-              value: new THREE.Vector3(0.0, 1.0, 1.0)
-            },
-            u_lightPos: {
-              value: new THREE.Vector3(-2.2, 2.0, 2.0)
             }
           }
         });
+        this.testMeshMaterial.side = THREE.DoubleSide;
 
         this.testMesh.material = this.testMeshMaterial;
         this.testMesh.material.needsUpdate = true;
+
+        this.testMesh.rotation.x += Math.PI * 0.5;
 
         this.bgScene.add(this.testMesh);
         res();
@@ -230,7 +227,7 @@ export default class WebGLView {
   }
 
   updateTestMesh(time) {
-    this.testMesh.rotation.y += this.PARAMS.rotSpeed;
+    // this.testMesh.rotation.y += this.PARAMS.rotSpeed;
 
     this.testMeshMaterial.uniforms.u_time.value = time;
   }
