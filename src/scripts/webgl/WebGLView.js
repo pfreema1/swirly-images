@@ -14,6 +14,7 @@ import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js';
 import { BloomPass } from 'three/examples/jsm/postprocessing/BloomPass.js';
 import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js';
 import { debounce } from '../utils/debounce';
+import StretchPlane from '../StretchPlane';
 
 export default class WebGLView {
   constructor(app) {
@@ -28,15 +29,25 @@ export default class WebGLView {
   async init() {
     this.initThree();
     this.initBgScene();
-    this.initLights();
     this.initTweakPane();
-    await this.loadTestMesh();
     this.setupTextCanvas();
     this.initMouseMoveListen();
     this.initMouseCanvas();
     this.initRenderTri();
+    this.initStretchPlane();
+    this.initScrollListener();
     this.initPostProcessing();
     this.initResizeHandler();
+  }
+
+  initScrollListener() {
+    window.addEventListener('wheel', (e) => {
+      console.log(e);
+    });
+  }
+
+  initStretchPlane() {
+    this.stretchPlane = new StretchPlane(this.bgScene);
   }
 
   initResizeHandler() {
@@ -107,7 +118,7 @@ export default class WebGLView {
         min: 0.0,
         max: 0.5
       })
-      .on('change', value => {});
+      .on('change', value => { });
   }
 
   initMouseCanvas() {
@@ -142,36 +153,6 @@ export default class WebGLView {
     this.textCanvas = new TextCanvas(this);
   }
 
-  loadTestMesh() {
-    return new Promise((res, rej) => {
-      let loader = new GLTFLoader();
-
-      loader.load('./bbali.glb', object => {
-        this.testMesh = object.scene.children[0];
-        console.log(this.testMesh);
-        this.testMesh.add(new THREE.AxesHelper());
-
-        this.testMeshMaterial = new THREE.ShaderMaterial({
-          fragmentShader: glslify(planeFrag),
-          vertexShader: glslify(planeVert),
-          uniforms: {
-            u_time: {
-              value: 0.0
-            }
-          }
-        });
-        this.testMeshMaterial.side = THREE.DoubleSide;
-
-        this.testMesh.material = this.testMeshMaterial;
-        this.testMesh.material.needsUpdate = true;
-
-        this.testMesh.rotation.x += Math.PI * 0.5;
-
-        this.bgScene.add(this.testMesh);
-        res();
-      });
-    });
-  }
 
   initRenderTri() {
     this.resize();
@@ -197,17 +178,12 @@ export default class WebGLView {
       100
     );
     this.controls = new OrbitControls(this.bgCamera, this.renderer.domElement);
+    this.controls.enableZoom = false;
 
     this.bgCamera.position.z = 3;
     this.controls.update();
 
     this.bgScene = new THREE.Scene();
-  }
-
-  initLights() {
-    this.pointLight = new THREE.PointLight(0xff0000, 1, 100);
-    this.pointLight.position.set(0, 0, 50);
-    this.bgScene.add(this.pointLight);
   }
 
   resize() {
@@ -226,12 +202,6 @@ export default class WebGLView {
     if (this.trackball) this.trackball.handleResize();
   }
 
-  updateTestMesh(time) {
-    // this.testMesh.rotation.y += this.PARAMS.rotSpeed;
-
-    this.testMeshMaterial.uniforms.u_time.value = time;
-  }
-
   updateTextCanvas(time) {
     this.textCanvas.textLine.update(time);
     this.textCanvas.textLine.draw(time);
@@ -248,16 +218,16 @@ export default class WebGLView {
       this.renderTri.triMaterial.uniforms.uTime.value = time;
     }
 
-    if (this.testMesh) {
-      this.updateTestMesh(time);
-    }
-
     if (this.mouseCanvas) {
       this.mouseCanvas.update();
     }
 
     if (this.textCanvas) {
       this.updateTextCanvas(time);
+    }
+
+    if (this.stretchPlane) {
+      this.stretchPlane.update(time);
     }
 
     if (this.trackball) this.trackball.update();
