@@ -15,6 +15,7 @@ import { BloomPass } from 'three/examples/jsm/postprocessing/BloomPass.js';
 import { FilmPass } from 'three/examples/jsm/postprocessing/FilmPass.js';
 import { debounce } from '../utils/debounce';
 import StretchPlane from '../StretchPlane';
+import Twister from '../Twister';
 
 export default class WebGLView {
   constructor(app) {
@@ -35,14 +36,23 @@ export default class WebGLView {
     this.initMouseCanvas();
     this.initRenderTri();
     this.initStretchPlane();
+    this.initTwister();
     this.initScrollListener();
     this.initPostProcessing();
     this.initResizeHandler();
   }
 
+  initTwister() {
+    this.twister = new Twister(this.stretchPlane);
+  }
+
   initScrollListener() {
-    window.addEventListener('wheel', (e) => {
-      console.log(e);
+    this.wheelDelta = 0;
+    window.addEventListener('wheel', e => {
+      // this.wheelDelta = e.deltaY;
+      TweenMax.to(this, 0.2, {
+        wheelDelta: e.deltaY
+      });
     });
   }
 
@@ -118,7 +128,7 @@ export default class WebGLView {
         min: 0.0,
         max: 0.5
       })
-      .on('change', value => { });
+      .on('change', value => {});
   }
 
   initMouseCanvas() {
@@ -153,7 +163,6 @@ export default class WebGLView {
     this.textCanvas = new TextCanvas(this);
   }
 
-
   initRenderTri() {
     this.resize();
 
@@ -180,7 +189,7 @@ export default class WebGLView {
     this.controls = new OrbitControls(this.bgCamera, this.renderer.domElement);
     this.controls.enableZoom = false;
 
-    this.bgCamera.position.z = 3;
+    this.bgCamera.position.z = 5;
     this.controls.update();
 
     this.bgScene = new THREE.Scene();
@@ -227,7 +236,11 @@ export default class WebGLView {
     }
 
     if (this.stretchPlane) {
-      this.stretchPlane.update(time);
+      this.stretchPlane.update(time, this.wheelDelta);
+    }
+
+    if (this.twister) {
+      this.twister.update(time, this.wheelDelta);
     }
 
     if (this.trackball) this.trackball.update();
