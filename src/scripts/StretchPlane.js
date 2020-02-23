@@ -41,6 +41,7 @@ export default class StretchPlane {
     });
 
     this.mesh = new THREE.Mesh(this.geo, this.material);
+    this.mesh.add(new THREE.AxesHelper());
 
     this.scene.add(this.mesh);
   }

@@ -43,7 +43,7 @@ export default class WebGLView {
   }
 
   initTwister() {
-    this.twister = new Twister(this.stretchPlane);
+    this.twister = new Twister(this.stretchPlane, this.bgCamera);
   }
 
   initScrollListener() {
